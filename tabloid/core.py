@@ -49,8 +49,8 @@ class FormattedTable:
         for column_number, line in enumerate(row):
             format_function = self._table[column_number]['formatter']
             if format_function is None:
-                format_function = lambda x: x
-            formatted_row += format_function(self._align_cell(line, column_number))
+                format_function = lambda x, y: x
+            formatted_row += format_function(self._align_cell(line, column_number), row)
         return formatted_row
 
     def _get_rows(self):
