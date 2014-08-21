@@ -65,6 +65,7 @@ class FormattedTable:
 
     def add_row(self, row):
         for column_number, line in enumerate(row):
+            line = str(line)
             self._table[column_number]['lines'].append(line)
             if self._table[column_number]['width'] < len(line):
                 self._table[column_number]['width'] = len(line)
