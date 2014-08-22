@@ -27,7 +27,7 @@ class FormattedTable:
                 width = tile - self._padding * len(self._table)
                 column['width'] = width
             header += self._fill_up_string(title, width)
-        return header
+        return header + self._fill_symbol * self._padding
 
     def _align_cell(self, elem, column_number):
         column_width = self._table[column_number]['width']
