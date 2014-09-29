@@ -6,9 +6,7 @@ Makes pretty table in console.
 
 Requirements and dependencies
 ----------
- - Now it's `python >= 3.3`.
-
-> In `python 3.*` does not works auto table-size.
+ - `python 3.*`.
 
  - [Colorama](https://pypi.python.org/pypi/colorama) needs to color header.
 

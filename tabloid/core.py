@@ -1,14 +1,33 @@
 import shutil
 from colorama import Style, Back
+import sys
 
 
 class FormattedTable:
     def __init__(self, width=None, padding=1, fill_symbol=' ', header_background=Back.GREEN):
-        self._terminal_width = width or shutil.get_terminal_size()[0]
+        self._terminal_width = width or self._get_terminal_size()
         self._header_background = header_background
         self._padding = padding
         self._fill_symbol = fill_symbol
         self._table = []
+
+    @staticmethod
+    def _get_terminal_size():
+        try:
+            return shutil.get_terminal_size()[0]
+        except AttributeError:
+            import fcntl
+            import termios
+            import struct
+
+            gwinsz = struct.pack("HHHH", 0, 0, 0, 0)
+
+            try:
+                gwinsz = fcntl.ioctl(sys.stdout.fileno(), termios.TIOCGWINSZ, gwinsz)
+            except Exception:
+                pass
+            _, columns = struct.unpack("HHHH", gwinsz)[:2]
+            return columns
 
     def _fill_up_string(self, string, width):
         indent = self._fill_symbol * self._padding
@@ -76,3 +95,4 @@ class FormattedTable:
                                  Style.RESET_ALL)
         body = '\n'.join(self._get_rows())
         return header, body
+
