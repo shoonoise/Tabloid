@@ -68,7 +68,7 @@ class FormattedTable:
         for column_number, line in enumerate(row):
             format_function = self._table[column_number]['formatter']
             if format_function is None:
-                format_function = lambda x, y: x
+                format_function = lambda x, _: x
             formatted_row += format_function(self._align_cell(line, column_number), row)
         return formatted_row
 
@@ -76,18 +76,27 @@ class FormattedTable:
         for row in zip(*[column['lines'] for column in self._table]):
             yield self._format_row(row)
 
-    def add_column(self, name, formatter=None):
+    def add_column(self, name, max_width=None, formatter=None):
         self._table.append({'title': name,
                             'width': len(name),
+                            'max_width': max_width,
                             'formatter': formatter,
                             'lines': []})
 
     def add_row(self, row):
         for column_number, line in enumerate(row):
             line = str(line)
+            max_width = self._table[column_number]['max_width']
+            column_width = self._table[column_number]['width']
             self._table[column_number]['lines'].append(line)
-            if self._table[column_number]['width'] < len(line):
-                self._table[column_number]['width'] = len(line)
+            if column_width < len(line):
+                if max_width is None:
+                    self._table[column_number]['width'] = len(line)
+                else:
+                    if max_width < column_width:
+                        raise RuntimeError("Max width can't be less than column name + padding: {}.".format(
+                            self._padding + column_width))
+                    self._table[column_number]['width'] = max_width
 
     def get_table(self):
         header = '{}{}{}'.format(self._header_background,
