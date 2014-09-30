@@ -19,7 +19,7 @@ If you run [`example.py`](https://raw.githubusercontent.com/shoonoise/Tabloid/ma
 Why not ${YOUR_FAV_LIB}?
 -------
 
-Well, at first, existing libs does not tolerant to ~big data~ long lines. And it's enough for me.
+Well, at first, existing libs does not tolerant to ~~big data~~ long lines. And it's enough for me.
 But, as I've started to write my own lib, I try to add something more.
 So, you can define formatting rules for each cell based on column, row or moon size.
 
