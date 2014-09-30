@@ -60,7 +60,7 @@ class FormattedTable:
 
     def _get_sliced_elements(self, elem, column_number):
         """
-        Slice string longer than column width to n lines with width equals column width
+        Slice string longer than column's width to n lines with width equals to column's width
         """
         column_width = self._table[column_number]['width']
         if len(elem) < column_width + self._padding:
