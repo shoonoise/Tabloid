@@ -1,6 +1,7 @@
 import shutil
-from colorama import Style, Back
 import sys
+from itertools import zip_longest
+from colorama import Style, Back
 
 
 class FormattedTable:
@@ -29,6 +30,15 @@ class FormattedTable:
             _, columns = struct.unpack("HHHH", gwinsz)[:2]
             return columns
 
+    def _get_header_width(self):
+        """
+        Calculate total header width:
+        (sum of width of each (column + padding)) + header padding
+        """
+        return sum(map(lambda x: self._padding + x,
+                       (column['max_width'] if column['max_width'] else column['width']
+                        for column in self._table))) + self._padding
+
     def _fill_up_string(self, string, width):
         indent = self._fill_symbol * self._padding
         fill = self._fill_symbol * (width - (len(string) + self._padding))
@@ -48,42 +58,49 @@ class FormattedTable:
             header += self._fill_up_string(title, width)
         return header + self._fill_symbol * self._padding
 
-    def _align_cell(self, elem, column_number):
+    def _get_sliced_elements(self, elem, column_number):
+        """
+        Slice string longer than column width to n lines with width equals column width
+        """
         column_width = self._table[column_number]['width']
-        needed_with = column_width + self._padding
-        if needed_with >= len(elem):
-            return self._fill_up_string(elem, needed_with)
-        else:
-            sliced_line = [elem[x:x+column_width] for x in range(0, len(elem), column_width)]
-            head = self._fill_up_string(''.join(sliced_line[:1]), 0)
-
-            padding = sum([column['width'] + self._padding for column in self._table[:column_number]])
-            tail = '\n'.join([(self._fill_symbol * self._padding) +
-                              (self._fill_symbol * padding) +
-                              elem for elem in sliced_line[1:]])
-            return '{}\n{}'.format(head, tail)
+        if len(elem) < column_width + self._padding:
+            return [elem]
+        return [elem[x:x+column_width] for x in range(0, len(elem), column_width)]
 
     def _format_row(self, row):
-        formatted_row = ''
-        for column_number, line in enumerate(row):
-            format_function = self._table[column_number]['formatter']
-            if format_function is None:
-                format_function = lambda x, _: x
-            formatted_row += format_function(self._align_cell(line, column_number), row)
-        return formatted_row
+        """
+        Align, slice and format row
+        """
+        for multiline_cells in zip_longest(*[self._get_sliced_elements(elem, column_number)
+                                             for column_number, elem in enumerate(row)], fillvalue=self._fill_symbol):
+            formatted_row = ''
+            for column_number, line in enumerate(multiline_cells):
+                format_function = self._table[column_number]['formatter']
+                needed_with = self._table[column_number]['width'] + self._padding
+                if format_function is None:
+                    format_function = lambda x, _: x
+                formatted_row += format_function(self._fill_up_string(line, needed_with), row)
+            yield formatted_row
 
     def _get_rows(self):
         for row in zip(*[column['lines'] for column in self._table]):
-            yield self._format_row(row)
+            yield from self._format_row(row)
 
-    def add_column(self, name, max_width=None, formatter=None):
+    def add_column(self, name, formatter=None, max_width=None):
+        """
+        Add column to the table (table's header)
+        """
         self._table.append({'title': name,
                             'width': len(name),
                             'max_width': max_width,
                             'formatter': formatter,
                             'lines': []})
+        assert self._terminal_width >= self._get_header_width(), "Header's width can't be over than terminal's size."
 
     def add_row(self, row):
+        """
+        Add row in the table
+        """
         for column_number, line in enumerate(row):
             line = str(line)
             max_width = self._table[column_number]['max_width']
