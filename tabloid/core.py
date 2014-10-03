@@ -84,7 +84,9 @@ class FormattedTable:
 
     def _get_rows(self):
         for row in zip(*[column['lines'] for column in self._table]):
-            yield from self._format_row(row)
+            # Python < 3.3 can't into `yeild from`
+            for _ in self._format_row(row):
+                yield _
 
     def add_column(self, name, formatter=None, max_width=None):
         """
